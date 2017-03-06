@@ -6,7 +6,25 @@
 #define TLIB_MIN_STACK  32768
 
 /* You will define your TCB structure here */
+typedef int bool;
+#define TRUE 1
+#define FALSE 0
+#define MAX_THREAD_ID 255
+#define HIGH_PRIORITY 0
+#define LOW_PRIORITY 1
 
+
+typedef struct TCB_t {
+    ucontext_t *ucontext;   //Pointer to CPU context
+    struct TCB_t *next_T;   //Pointer to next thread's TCB
+    struct TCB_t *prev_T;   //Pointer to previous threas's TCB
+    unsigned int priority:1;//Priority --> 0 -- 1
+    unsigned int t_id:8;    //ID       --> 0 -- 256
+    void* start_func;
+    void* param;
+
+    //TODO ADD STACK
+} TCB_t;
 
 /* Some definitions below */
 
