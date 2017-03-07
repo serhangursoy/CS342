@@ -9,22 +9,28 @@
 typedef int bool;
 #define TRUE 1
 #define FALSE 0
-#define MAX_THREAD_ID 255
-#define HIGH_PRIORITY 0
-#define LOW_PRIORITY 1
+#define MAX_THREAD_ID 1023
+#define CONTEXT_ERROR -1
+#define RUNNING 0
+#define READY 1
+#define FREE 1
+#define NOT_FREE 0
 
 
 typedef struct TCB_t {
     ucontext_t *ucontext;   //Pointer to CPU context
-    struct TCB_t *next_T;   //Pointer to next thread's TCB
-    struct TCB_t *prev_T;   //Pointer to previous threas's TCB
-    unsigned int priority:1;//Priority --> 0 -- 1
-    unsigned int t_id:8;    //ID       --> 0 -- 256
+    unsigned int t_id:10;   //ID--> 0 -- 1023
     void* start_func;
     void* param;
-
+    bool isFree;
+    unsigned int state;
+    unsigned int prev_id:10;
     //TODO ADD STACK
 } TCB_t;
+
+typedef struct TCB_LIST {
+    TCB_t list[TLIB_MAX_THREADS];
+}TCB_LIST;
 
 /* Some definitions below */
 
