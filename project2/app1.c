@@ -14,10 +14,10 @@ void *foo(void *v)
 //	}
 
 	printf ("thread %d is finished , exiting...\n", (unsigned int)v);
-   	 if(((unsigned int) v) < MAX_THREAD_ID - 1000)
         tlib_yield((unsigned int)v + 1);
 
 
+   printf("Ben thread %d , bana döndüler reis \n" ,(unsigned int) v) ;
 	return (NULL); 
 }
 
@@ -30,16 +30,16 @@ int main(int argc, char **argv)
 	
 	tlib_init ();
 
-	for (i = 0; i < 100; ++i) {
+	for (i = 0; i < 3; ++i) {
 		tid[i] = tlib_create_thread ((void *)&foo, (void *)(i+1));
 		printf ("thead %d created\n", (int) tid[i]);
 
 	}
 
 	//while (c < 100) {
-	  	printf ("thread 1 is running\n");
+	  	printf ("thread 0 is running\n");
 		//if (c % 10 == 0) {
-			tlib_yield (2);
+			tlib_yield (1);
 		//}
 		//c++;
 	//}

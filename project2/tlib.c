@@ -14,8 +14,9 @@ TCB_t *current;
 TCB_LIST tcb_list;
 #define TCBLIST tcb_list.list
 
+static int isDelete = FALSE;
 //A solution to getContext and setContext to return twice.
-static volatile int isRunning;
+static volatile int isRunning = RUNNING;
 
 
 int tlib_init (void)
@@ -64,7 +65,7 @@ int tlib_create_thread(void (*func)(void *), void *param)
      * Setting parameters to "param"
      * Flags TCB as NOT_FREE
      *
-     * RETURNS --> ID of the created thread or if TLIB_NOMORE if there is no FREE  TCB in TCBLIST
+     * RETURNS --> ID of the created thread or TLIB_NOMORE if there is no FREE  TCB in TCBLIST
      */
 
     for(int i = 0; i < TLIB_MAX_THREADS; i++)
@@ -89,7 +90,7 @@ int tlib_yield(int wantTid)
      *  If checks fail --> Returns TLIB_INVALID
      *
      * isRunning -> Flag for understanding the current thread
-     *
+     * isDelete  -> Flag for deletion
      */
 
     if(wantTid > MAX_THREAD_ID)
@@ -99,25 +100,31 @@ int tlib_yield(int wantTid)
         return (TLIB_INVALID);
     }
 
+
     unsigned int temp = current->t_id;
 
 
-    if(getcontext(current->ucontext) == CONTEXT_ERROR)
-        return (TLIB_ERROR);
-    else{
-        current = &(TCBLIST[wantTid]);
-        if(current->ucontext != NULL){
-            if(isRunning == RUNNING){
-                isRunning = READY;
+    getcontext((current->ucontext));
+    current->ucontext->uc_link = (struct ucontext *) &TCBLIST[wantTid].ucontext;
+
+    current =  (TCB_t *) &(TCBLIST[wantTid]);
+
+    if(current->ucontext != NULL){
+        if(isRunning == RUNNING){
+            isRunning = READY;
+            if(isDelete == FALSE)
                 current->prev_id = temp;
-                setcontext((current->ucontext));
-            }
-        } else {
-            current->prev_id = temp;
-            current->ucontext = (ucontext_t* )malloc( sizeof( ucontext_t) );
-            stub(current->start_func, current->param);
-            }
+            else isDelete = FALSE;
+            printf("Thread %d  will give CPU to: %d \n" , temp ,current->t_id );
+            setcontext(( struct ucontext *)current->ucontext);
+        }
+    } else {
+        current->prev_id = temp;
+        current->ucontext = (ucontext_t* )malloc( sizeof( ucontext_t) );
+        printf("Thread %d  will give CPU to new thread: %d \n" , temp ,current->t_id );
+        stub(current->start_func, current->param);
     }
+
 }
 
 
@@ -127,7 +134,9 @@ int tlib_delete_thread(int tid)
         tid = current->t_id;
     printf("Deleting thread id: %d \n" , tid);
     TCBLIST[tid].isFree = FREE;
+    isDelete = TRUE;
     tlib_yield(TCBLIST[tid].prev_id); //Give control to previous thread TODO NOT WORKING
+
     return (TLIB_SUCCESS);
 }
 
